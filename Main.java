@@ -41,6 +41,8 @@ class  Game {
     int columns;
     int rows;
     int[][] grid;
+    Dictionary<int[], Integer> shipCoordinates = new Hashtable<int[], Integer>();
+    Dictionary<Integer, Integer> shipCellNumbers = new Hashtable<Integer, Integer>();
 
     public static void main(String[] args) throws InvalidKeyException {
         Game game = new Game();
@@ -52,7 +54,45 @@ class  Game {
             }
             System.out.println();
         }
+
+        System.out.println("dict " + game.shipCoordinates);
+
+        game.getInput();
     }
+
+    public void getInput(){
+
+        Scanner obj = new Scanner(System.in);
+        while(!shipCellNumbers.isEmpty()) {
+            System.out.print("Guess x: ");
+            int x = obj.nextInt();
+
+            System.out.print("Guess y: ");
+            int y = obj.nextInt();
+
+            boolean found = false;
+            Enumeration<int[]> eu = this.shipCoordinates.keys();
+
+            while (eu.hasMoreElements()){
+                int[] key = eu.nextElement();
+                if(key[0] == x && key[1] == y){
+                    found = true;
+                    int shipNum = this.shipCoordinates.get(key);
+                    shipCoordinates.remove(key);
+                    shipCellNumbers.put(shipNum, shipCellNumbers.get(shipNum)-1);
+                    if(shipCellNumbers.get(shipNum) == 0){
+                        System.out.println("Kill!");
+                        shipCellNumbers.remove(shipNum);
+                    }else{
+                        System.out.println("Hit!");
+                    }
+                }
+            }
+
+            if(!found) System.out.println("Missed");
+        }
+        System.out.println("You win!");
+    };
 
     private void initialize() throws InvalidKeyException {
         Scanner obj = new Scanner(System.in);
@@ -74,7 +114,7 @@ class  Game {
 
             // check if it can be placed
 
-            if(this.tryToPlaceShip(this.grid, ship)) i = i+1;
+            if(this.tryToPlaceShip(this.grid, ship, i)) i = i+1;
             // place it if yes
 
             // test another if not
@@ -95,7 +135,7 @@ class  Game {
         return newShip;
     }
 
-    private boolean tryToPlaceShip(int[][] grid, Ship ship) {
+    private boolean tryToPlaceShip(int[][] grid, Ship ship, int shipNum) {
         Random rand = new Random();
 
         int x = rand.nextInt(this.columns);
@@ -117,7 +157,7 @@ class  Game {
             int add_y = sides.get(position)[i][1];
             boolean isPlaceable = this.findCoordinates(ship.getLength(), x, y, add_x, add_y);
             if (isPlaceable) {
-                placeShip(ship.getLength(), x, y, add_x, add_y);
+                placeShip(ship.getLength(), x, y, add_x, add_y, shipNum);
                 return true;
             }
         }
@@ -139,11 +179,14 @@ class  Game {
         return true;
     }
 
-    private void placeShip(int len, int x, int y, int add_x, int add_y){
+    private void placeShip(int len, int x, int y, int add_x, int add_y, int shipNum){
         for(int i=0; i< len; i++){
             int x_index = x + i * add_x;
             int y_index = y + i * add_y;
             grid[y_index][x_index] = i+1;
+            System.out.println(Integer.toString(shipNum) + " [" + Integer.toString(x_index) + ", " + Integer.toString(y_index) + "] ");
+            this.shipCoordinates.put(new int[]{x_index, y_index}, shipNum);
         }
+        this.shipCellNumbers.put(shipNum, len);
     };
 }
