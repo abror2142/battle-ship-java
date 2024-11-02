@@ -68,29 +68,23 @@ class  Game {
     int playerAttempts = 0;
     HashMap<Coord, Integer> shipCoordinates = new HashMap<Coord, Integer>();
     HashMap<Integer, Integer> shipCellNumbers = new HashMap<Integer, Integer>();
-    Set<Coord> visitedCoordinates = new HashSet<Coord>();;
+    // stores ship; used to display ship characteristics (in the future)
+    HashMap<Integer, Ship> ships = new HashMap<Integer, Ship>();
+
+    HashMap<Coord, Integer> shipVisitedCoord = new HashMap<Coord, Integer>();
+    Set<Coord> visitedCoordinates = new HashSet<Coord>();
 
     public static void main(String[] args) throws InvalidKeyException {
         Game game = new Game();
         game.initialize();
-
-        for(int i=0; i<game.rows; i++){
-            for (int j=0; j<game.columns; j++){
-                System.out.print(Integer.toString(game.grid[i][j]) + ' ');
-            }
-            System.out.println();
-        }
-
-        System.out.println("dict " + game.shipCoordinates);
-
         game.getInput();
     }
 
     public void getInput(){
-
         Scanner obj = new Scanner(System.in);
 
         while(!shipCellNumbers.isEmpty()) {
+            this.printGrid();
             System.out.print("Guess x: ");
             int x = obj.nextInt();
 
@@ -103,6 +97,7 @@ class  Game {
             if(this.shipCoordinates.containsKey(coord)){
                 int shipNum = this.shipCoordinates.get(coord);
                 this.shipCoordinates.remove(coord);
+                this.shipVisitedCoord.put(coord, shipNum);
 
                 if(this.shipCellNumbers.get(shipNum) == 1){
                     System.out.println("Killed!");
@@ -112,14 +107,27 @@ class  Game {
                     this.shipCellNumbers.put(shipNum, this.shipCellNumbers.get(shipNum)-1);
                 }
             }else {
+                this.visitedCoordinates.add(coord);
                 System.out.println("Missed!");
             }
         }
-
         System.out.println("You win!");
         System.out.println("Total Attempts: " + playerAttempts);
     };
 
+    public void printGrid(){
+        Coord coord;
+        for(int i=0; i<this.rows; i++){  // i = y
+            for (int j=0; j<this.columns; j++){  // j = x
+                coord = new Coord(j, i);
+                String str = Integer.toString(this.grid[i][j]);
+                if(this.visitedCoordinates.contains(coord)) str = "v";
+                if(this.shipVisitedCoord.containsKey(coord)) str = "f";
+                System.out.print(str + " ");
+            }
+            System.out.println();
+        }
+    }
 
     private void initialize() throws InvalidKeyException {
         Scanner obj = new Scanner(System.in);
