@@ -1,6 +1,30 @@
 import java.security.InvalidKeyException;
 import java.util.*;
 
+class Coord {
+    private final int x;
+    private final int y;
+
+    public Coord(int x, int y){
+        this.x = x;
+        this.y = y;
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(this == o) return true;
+        if(o == null || getClass() != o.getClass()) return false;
+        Coord key = (Coord) o;
+        return Objects.equals(x, key.x) && Objects.equals(y, key.y);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
+    }
+}
+
+
 class Ship {
     String[] possiblePositions = {"horizontal", "vertical", "across"};
 
@@ -41,8 +65,10 @@ class  Game {
     int columns;
     int rows;
     int[][] grid;
-    Dictionary<int[], Integer> shipCoordinates = new Hashtable<int[], Integer>();
-    Dictionary<Integer, Integer> shipCellNumbers = new Hashtable<Integer, Integer>();
+    int playerAttempts = 0;
+    HashMap<Coord, Integer> shipCoordinates = new HashMap<Coord, Integer>();
+    HashMap<Integer, Integer> shipCellNumbers = new HashMap<Integer, Integer>();
+    Set<Coord> visitedCoordinates = new HashSet<Coord>();;
 
     public static void main(String[] args) throws InvalidKeyException {
         Game game = new Game();
@@ -63,6 +89,7 @@ class  Game {
     public void getInput(){
 
         Scanner obj = new Scanner(System.in);
+
         while(!shipCellNumbers.isEmpty()) {
             System.out.print("Guess x: ");
             int x = obj.nextInt();
@@ -70,29 +97,29 @@ class  Game {
             System.out.print("Guess y: ");
             int y = obj.nextInt();
 
-            boolean found = false;
-            Enumeration<int[]> eu = this.shipCoordinates.keys();
+            playerAttempts++;
 
-            while (eu.hasMoreElements()){
-                int[] key = eu.nextElement();
-                if(key[0] == x && key[1] == y){
-                    found = true;
-                    int shipNum = this.shipCoordinates.get(key);
-                    shipCoordinates.remove(key);
-                    shipCellNumbers.put(shipNum, shipCellNumbers.get(shipNum)-1);
-                    if(shipCellNumbers.get(shipNum) == 0){
-                        System.out.println("Kill!");
-                        shipCellNumbers.remove(shipNum);
-                    }else{
-                        System.out.println("Hit!");
-                    }
+            Coord coord = new Coord(x, y);
+            if(this.shipCoordinates.containsKey(coord)){
+                int shipNum = this.shipCoordinates.get(coord);
+                this.shipCoordinates.remove(coord);
+
+                if(this.shipCellNumbers.get(shipNum) == 1){
+                    System.out.println("Killed!");
+                    shipCellNumbers.remove(shipNum);
+                }else{
+                    System.out.println("Hit!");
+                    this.shipCellNumbers.put(shipNum, this.shipCellNumbers.get(shipNum)-1);
                 }
+            }else {
+                System.out.println("Missed!");
             }
-
-            if(!found) System.out.println("Missed");
         }
+
         System.out.println("You win!");
+        System.out.println("Total Attempts: " + playerAttempts);
     };
+
 
     private void initialize() throws InvalidKeyException {
         Scanner obj = new Scanner(System.in);
@@ -184,8 +211,7 @@ class  Game {
             int x_index = x + i * add_x;
             int y_index = y + i * add_y;
             grid[y_index][x_index] = i+1;
-            System.out.println(Integer.toString(shipNum) + " [" + Integer.toString(x_index) + ", " + Integer.toString(y_index) + "] ");
-            this.shipCoordinates.put(new int[]{x_index, y_index}, shipNum);
+            this.shipCoordinates.put(new Coord(x_index, y_index), shipNum);
         }
         this.shipCellNumbers.put(shipNum, len);
     };
